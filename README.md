@@ -71,8 +71,8 @@ Having implemented gamma correction and taken advantage of the RGB, YUV, and HSV
 Given a binary image as shown in Fig. 6, the next step is to segment pixels that correspond to the left and right lane lines. First, x-coordinates corresponding to the bottom of the image for each lane are estimated and then a sliding-windows search is performed. In order to find these two x-coordinates, a column-wise count of white pixels is taken for the bottom half of the image. The two maximums of this column-wise count are taken to represent the x-coordinates of each lane. Fig. 7 shows a visualization of this step, where the left lane would be taken to start from the bottom of the image at x = 364 and the right lane at x = 1005.
 
 <div align="center">
-  <p><img src="./figs/fig2.png"></p>
-  <p>Fig. 7: Random sampling of dataset.</p>
+  <p><img src="http://www.lrgonzales.com/s/hist_2.svg"></p>
+  <p>Fig. 7: Column-wise count of bottom-half of binary image having a width of 1280.</p>
 </div>
 
 Once these coordinates are determined, a sliding-windows search begins at the bottom of the image by placing a window at the determined x-coordinates for each lane. Subsequent windows are shifted if the previous window had more than a certain number of pixels. A visualization is shown in Fig. 8. The sliding-windows search is parameterized by a window count and a window width. The window height is determined by the overall image height and the window count. Fig. 8 shows an example of a window count of nine.
@@ -109,5 +109,6 @@ Run `./init.sh` to obtain the dataset in `./data/`. To perform detection on `tes
 The project makes use of `gdrive` and the following Python packages: `numpy`, `matplotlib`, `opencv`, `pandas`, `sklearn`, `scipy`.
 
 ### References
-[1] [Histograms of Oriented Gradients for Human Detection, N. Dalal et al., 2005](https://lear.inrialpes.fr/people/triggs/pubs/Dalal-cvpr05.pdf)
-[2] [Histograms of Oriented Gradients for Human Detection, N. Dalal et al., 2005](https://lear.inrialpes.fr/people/triggs/pubs/Dalal-cvpr05.pdf)
+[1] [OpenCV Gamma Correction, PyImageSearch, A. Rosebrock, 2015](https://www.pyimagesearch.com/2015/10/05/opencv-gamma-correction/)
+
+[2] [Adaptive histogram equalization, Wikipedia](https://en.wikipedia.org/wiki/Adaptive_histogram_equalization)
