@@ -18,7 +18,7 @@ The lane detection pipeline primarily consists of the following steps, which are
 Fig. 1 will serve as a reference image for the processing steps to be discussed.
 
 <div align="center">
-  <p><img src="./figs/fig_1.jpg" width="700"></p>
+  <p><img src="./figs/fig_1.jpg" width="600"></p>
   <p>Fig. 1: Input reference image.</p>
 </div>
 
