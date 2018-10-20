@@ -55,7 +55,7 @@ def draw_lane(img_dst, Minv, offcenter, debug=False):
     if offcenter > 0:
         offcenter_text = 'Right of center (m): %.2f' % offcenter
     else:
-        offcenter_text = 'Left of center (m): %.2f' % offcenter
+        offcenter_text = 'Left of center (m): %.2f' % abs(offcenter)
     cv2.putText(img_detected, offcenter_text, (10,75), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255))
 
 
