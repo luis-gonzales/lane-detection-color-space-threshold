@@ -10,7 +10,10 @@ This project uses perspective transform and color space thresholding to perform 
 
 The lane detection pipeline primarily consists of the following steps, which are elaborated on in the remainder of the write-up:
 * Distortion correction
-*
+* Perspective transform
+* Color space thresholding
+* Lane segmentation
+* Drawing
 
 Fig. 1 will serve as a reference image for the processing steps to be discussed.
 
@@ -25,46 +28,86 @@ Lane detection is a safety-critical component of a self-driving vehicle. While i
 ### Distortion Correction
 Distortion is a common artifact in present-day camera lenses. It is typically associated with large-range zoom lenses but can also be found in low-end, inexpensive lenses. Wide-angle lenses also suffer from distortion. The types of distortion present in these cases are radial defects and can be corrected for in software using 2-dimensional transformations. Because one of the goals of this pipeline is to capture the radius of curvature, it is critical to correct for any distortion from the start.
 
-This project achieves vehicle detection by first implementing an object (vehicle) classifier and uses it to analyze subsections of an image on which detection is to be performed. An example of the technique is shown in Fig. 1. The area within the dotted white rectangle would be fed to the image classifier, which would be expected to deem that the region does not contain a vehicle. The rectangle is stepped throughout the image in a technique referred to as sliding windows and is done so at pre-determined step sizes and aspect ratios. If the area within the rectangle is not the size of the native image classifier, resizing is necessary.
+While high-level image processing software (e.g., Adobe Photoshop) may store the necessary parameters for distortion correction of popular cameras, it is also possible to obtain these parameters by using lower-level packages. OpenCV was used to obtain the proper parameters and was used to undistort the input image, as shown in Fig. 2. Comparing with Fig. 1, note that most of the correction is noticeable along the edges of the image, such as the white car on the right.
 
 <div align="center">
   <p><img src="./figs/fig1.jpg" width="700"></p>
   <p>Fig. 1: Image on which detection is to be performed with <br/>depiction of region to be analyzed by the image classifier.</p>
 </div>
 
-Although the sliding windows technique presents challenges of its own in practice, particularly in terms of filtering out false positives, the remainder of this documentation focuses on the image classifier.
-
-### Image Classifier
-The image classifier leverages traditional computer vision techniques, namely feature extraction followed by classification. In particular, the HoG feature extractor and Linear Support Vector Classifier (SVC) were used. A random sampling of the dataset is shown below in the same resolution as used by the classifier, 64 x 64 pixels. The dataset contains 8,792 true labels ([vehicles](https://s3.amazonaws.com/udacity-sdc/Vehicle_Tracking/vehicles.zip)) and 8,972 false labels ([not vehicles](https://s3.amazonaws.com/udacity-sdc/Vehicle_Tracking/non-vehicles.zip)).
+### Perspective Transform
+Having a bird’s-eye view of the road would simplify the task of measuring the lane curvature. However, the center-mounted camera captures the road ahead in 3-dimensional space. A perspective transform can help with mapping between these two spaces, as shown in Fig. 3. One limitation of the implemented method is that it does not compensate for any slope of the road itself.
 
 <div align="center">
   <p><img src="./figs/fig2.png"></p>
   <p>Fig. 2: Random sampling of dataset.</p>
 </div>
 
-While it’s beyond the intended scope of this documentation to describe HoG in detail (refer to [1]), note that the HoG technique steps through portions of an image and computes the orientation (or angle) of the gradient at each step. In this project, rather than calculating the gradients in the RGB colorspace, the YUV colorspace was used for robustness. Having performed the colorspace mapping, HoG features are extracted for each channel independently. The result of each channel is shaped into a one-dimensional vector and concatenated with the HoG features of other channels, resulting in a final feature vector in <a href="https://www.codecogs.com/eqnedit.php?latex=\mathbb{R}^{1188}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\mathbb{R}^{1188}" title="\mathbb{R}^{1188}" /></a>. Fig. 3 gives a visualization of the HoG features for the Y channel (note: images enlarged from native 64 x 64 to show detail).
+### Color Space Thresholding
+Given that the focus of the detection pipeline is on lane lines, the next step is to create a binary image that emphasizes pixels that correspond to lane markings. Intuitively, this could be accomplished through RGB thresholding, as lane markings are expected to be either yellow or white. However, RGB thresholding is known to perform poorly under wide ranges of brightness for any given color (e.g., markings under shadows versus direct sunlight). For this reason, it’s helpful to perform thresholding using a different color space that is more invariant to differing levels of brightness.
+
+Fig. 4 shows the S channel (in grayscale) of the HSV representation of perspective-transformed Fig. 3. Note that this particular channel helps emphasize the yellow markings, even across the varying road types. Ultimately, various combinations of color spaces and corresponding thresholds can be combined to reliably pick out the white and yellow lane markings. Note that it’s possible to perform the thresholding prior to the perspective transform, but, because the perspective transform also performs interpolation, another threshold would be needed.
 
 <div align="center">
-  <p><img src="./figs/hog.png"></p>
-  <p>Fig. 3: Enlarged RGB image and <br/>HoG features of Y channel.</p>
+  <p><img src="./figs/fig2.png"></p>
+  <p>Fig. 2: Random sampling of dataset.</p>
 </div>
 
-Training consists of obtaining HoG feature vectors for the entire training set and fitting a linear SVC to the feature vectors and the corresponding training labels (True/False). Using an SVC penalty parameter of C=1.0, a training set accuracy of 1.0 and validation set accuracy of 0.988 was achieved. The SVC penalty parameter and the HoG parameters were treated as hyperparameters during the training process.
+Despite using color spaces that may be less sensitive to brightness variations, the range of environments in the real-world can often be too wide for color spaces alone to solve the problem. For example, take the difference between driving on a sunny day on a road with no shade versus driving on a cloudy day under an overpass or tunnel with poor lighting. Because of these extremes, gamma correction [1] was implemented on the original RGB image before color space transformation and thresholding. The value of gamma is determined based on the mean brightness (Y channel from YUV colorspace). A high value for mean brightness corresponds to a low value for gamma and vice-versa. Fig. 5 shows a gamma-corrected version of Fig. 3 where the light-colored concrete led to a low value for gamma and a darkening of the image. It is on the image in Fig. 5 that color space conversions and thresholding would be performed.
+
+<div align="center">
+  <p><img src="./figs/fig2.png"></p>
+  <p>Fig. 2: Random sampling of dataset.</p>
+</div>
+
+Having implemented gamma correction and taken advantage of the RGB, YUV, and HSV color spaces, the final binary image emphasizing pixels corresponding to lane markings is shown below.
+
+<div align="center">
+  <p><img src="./figs/fig2.png"></p>
+  <p>Fig. 2: Random sampling of dataset.</p>
+</div>
+
+### Lane Segmentation
+Given a binary image as shown in Fig. 6, the next step is to segment pixels that correspond to the left and right lane lines. First, x-coordinates corresponding to the bottom of the image for each lane are estimated and then a sliding-windows search is performed. In order to find these two x-coordinates, a column-wise count of white pixels is taken for the bottom half of the image. The two maximums of this column-wise count are taken to represent the x-coordinates of each lane. Fig. 7 shows a visualization of this step, where the left lane would be taken to start from the bottom of the image at x = 364 and the right lane at x = 1005.
+
+<div align="center">
+  <p><img src="./figs/fig2.png"></p>
+  <p>Fig. 2: Random sampling of dataset.</p>
+</div>
+
+Once these coordinates are determined, a sliding-windows search begins at the bottom of the image by placing a window at the determined x-coordinates for each lane. Subsequent windows are shifted if the previous window had more than a certain number of pixels. A visualization is shown in Fig. 8. The sliding-windows search is parameterized by a window count and a window width. The window height is determined by the overall image height and the window count. Fig. 8 shows an example of a window count of nine.
+
+<div align="center">
+  <p><img src="./figs/fig2.png"></p>
+  <p>Fig. 2: Random sampling of dataset.</p>
+</div>
+
+With pixels now segmented between left and right lane lines, each is fit to a second-order polynomial. The polynomials are used to determine how far off center the vehicle is and the radius of curvature of the detected lane. It’s worth noting that in the case of video capture, it’s possible to use the polynomial fit from a previous frame to guide the lane search of a present frame such that the sliding-windows search can be skipped.
+
+### Drawing
+With a second-order polynomial fit to each lane line, a polygon can be defined as the area enclosed by the two polynomials and the top and bottom of the image. This area represents the portion of road that is deemed to be a lane in the bird’s-eye view.
+
+<div align="center">
+  <p><img src="./figs/fig2.png"></p>
+  <p>Fig. 2: Random sampling of dataset.</p>
+</div>
+
+In order to overlay this polygon on the original (curvature-corrected) image, the inverse perspective transform from earlier is needed. The figure below shows the inverse perspective transform performed on Fig. 9 along with an overlay on the curvature-corrected image.
+
+<div align="center">
+  <p><img src="./figs/fig2.png"></p>
+  <p>Fig. 2: Random sampling of dataset.</p>
+</div>
 
 ### Improvements
-The HoG feature extractor along with SVC appears to work very well as a standalone classifier in this application; however, using it in a larger image for detection by way of the sliding windows technique proved to be challenging, requiring a lot of fine-tuning. Reducing the step size of the sliding windows implementation may help, but this would come at the penalty of increased computation. It’d be worthwhile to investigate recent detection techniques, particularly the You Only Look Once (YOLO) algorithm.
+Color space thresholding is arguably the most critical and sensitive aspect of the detection pipeline, so any improvements would be best directed in that portion of the pipeline. Finer tuning of the thresholding parameters could help, but what would probably help more is correcting for brightness. One technique that seems favorable over gamma correction is adaptive histogram equalization [2]. It would also be interesting to see the results of replacing the entire pipeline with a deep learning approach.
 
 ### Usage
-Run `./init.sh` to obtain the dataset in `./data/`.
-
-#### Training
-Run `python src/classifier_train.py` to train the model. The trained Linear SVC model saves to `./` as `pickled_classifier`. Note that this repo already includes a saved copy of the model. The chosen value for the SVC penalty parameter is predefined in `src/classifier_train.py` but can be changed by redefining `C`.
-
-#### Detection
-To perform detection on `test_inputs/<file>`, run `python src/main.py test_inputs/<file>`. The file to perform detection on may be either a `jpg` or an `mp4`.
+Run `./init.sh` to obtain the dataset in `./data/`. To perform detection on `test_inputs/<file>`, run `python src/main.py test_inputs/<file>`. The file to perform detection on may be either a `jpg` or an `mp4`.
 
 ### Dependencies
 The project makes use of `gdrive` and the following Python packages: `numpy`, `matplotlib`, `opencv`, `pandas`, `sklearn`, `scipy`.
 
 ### References
 [1] [Histograms of Oriented Gradients for Human Detection, N. Dalal et al., 2005](https://lear.inrialpes.fr/people/triggs/pubs/Dalal-cvpr05.pdf)
+[2] [Histograms of Oriented Gradients for Human Detection, N. Dalal et al., 2005](https://lear.inrialpes.fr/people/triggs/pubs/Dalal-cvpr05.pdf)
