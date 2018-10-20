@@ -3,8 +3,8 @@
 This project uses perspective transform and color space thresholding to perform traffic lane detection from an image or video capture of a camera mounted in the center of a vehicle. The detection pipeline outputs the radius of curvature of the detected lane, how far off center the vehicle is, and highlights the area within the capture deemed to be a lane. Click on the image below for a video of the detection system in use during highway driving. A write-up is also available at [www.lrgonzales.com/traffic-lane-detection](http://www.lrgonzales.com/traffic-lane-detection).
 
 <div align="center">
-<a href="https://youtu.be/zsQLIaCufbI">
-  <img src="./figs/thumbnail.png" alt="YouTube video" width="700">
+<a href="https://youtu.be/qAEaes0qTBw">
+  <img src="./figs/thumbnail.png" alt="YouTube video" width="600">
 </a>
 </div>
 
