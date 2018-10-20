@@ -71,7 +71,7 @@ Having implemented gamma correction and taken advantage of the RGB, YUV, and HSV
 Given a binary image as shown in Fig. 6, the next step is to segment pixels that correspond to the left and right lane lines. First, x-coordinates corresponding to the bottom of the image for each lane are estimated and then a sliding-windows search is performed. In order to find these two x-coordinates, a column-wise count of white pixels is taken for the bottom half of the image. The two maximums of this column-wise count are taken to represent the x-coordinates of each lane. Fig. 7 shows a visualization of this step, where the left lane would be taken to start from the bottom of the image at x = 364 and the right lane at x = 1005.
 
 <div align="center">
-  <p><img src="http://www.lrgonzales.com/s/hist_2.svg" width="800"></p>
+  <p><img src="http://www.lrgonzales.com/s/hist_2.svg" width="715"></p>
   <p>Fig. 7: Column-wise count of bottom-half of binary image having a width of 1280.</p>
 </div>
 
