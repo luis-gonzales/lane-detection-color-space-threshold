@@ -4,7 +4,7 @@ This project uses perspective transform and color space thresholding to perform 
 
 <div align="center">
 <a href="https://youtu.be/qAEaes0qTBw">
-  <img src="./figs/thumbnail.png" alt="YouTube video" width="600">
+  <img src="./figs/thumbnail.jpg" alt="YouTube video" width="600">
 </a>
 </div>
 
