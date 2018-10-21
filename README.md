@@ -103,10 +103,12 @@ In order to overlay this polygon on the original (curvature-corrected) image, th
 Color space thresholding is arguably the most critical and sensitive aspect of the detection pipeline, so any improvements would be best directed in that portion of the pipeline. Finer tuning of the thresholding parameters could help, but what would probably help more is correcting for brightness. One technique that seems favorable over gamma correction is adaptive histogram equalization [2]. It would also be interesting to see the results of replacing the entire pipeline with a deep learning approach.
 
 ### Usage
-Run `./init.sh` to obtain the dataset in `./data/`. To perform detection on `test_inputs/<file>`, run `python src/main.py test_inputs/<file>`. The file to perform detection on may be either a `jpg` or an `mp4`.
+The parameters from the camera calibration routine are uploaded to the repository as `pickled_cal_params`. If one desires to run the calibration routine again, run `python src/calibration.py <dir> <n_col>, <n_row>`, where `<dir>` is the directory to checkerboard images (e.g., `calibration_imgs`), and `<n_col>` and `<n_row>` are the number of intersecting columns and rows (e.g., 9 and 6) in the checkerboard, respectively.
+
+To perform lane detection on `<file>`, run `python src/main.py <file>`. The file to perform detection on may be either a `jpg` or an `mp4`.
 
 ### Dependencies
-The project makes use of `gdrive` and the following Python packages: `numpy`, `matplotlib`, `opencv`, `pandas`, `sklearn`, `scipy`.
+The project makes use of the following Python packages: `numpy`, `matplotlib`, `opencv`, `sys`, `pickle`, `glob`, `collections`, and `moviepy`.
 
 ### References
 [1] [OpenCV Gamma Correction, PyImageSearch, A. Rosebrock, 2015](https://www.pyimagesearch.com/2015/10/05/opencv-gamma-correction/)
