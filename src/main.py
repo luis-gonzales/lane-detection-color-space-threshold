@@ -33,7 +33,7 @@ dst = np.float32([ [x_offset,0],           # TL
 M = cv2.getPerspectiveTransform(src, dst)
 Minv = cv2.getPerspectiveTransform(dst, src)
 
-debug = True
+debug = False
 
 def lane_detect(img):
     
