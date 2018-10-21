@@ -104,10 +104,9 @@ if __name__ == "__main__":
         plt.imsave('output/' + f_name, lane_detect, vmin=0, vmax=255)
 
     elif ext == 'mp4':
-        print('received mp4')
         vid_clip = VideoFileClip(img_path)
         vid_result = vid_clip.fl_image(lane_detect)
-        vid_result.write_videofile('output/' + f_name, audio=False, progress_bar=False)
+        vid_result.write_videofile('output/' + f_name, audio=False, progress_bar=True)
 
     else:
         print('Unsupported input type received!')
