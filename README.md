@@ -103,7 +103,7 @@ In order to overlay this polygon on the original (curvature-corrected) image, th
 Color space thresholding is arguably the most critical and sensitive aspect of the detection pipeline, so any improvements would be best directed in that portion of the pipeline. Finer tuning of the thresholding parameters could help, but what would probably help more is correcting for brightness. One technique that seems favorable over gamma correction is adaptive histogram equalization [2]. It would also be interesting to see the results of replacing the entire pipeline with a deep learning approach.
 
 ### Usage
-The parameters from the camera calibration routine are uploaded to the repository as `pickled_cal_params`. If one desires to run the calibration routine again, run `python src/calibration.py <dir> <n_col>, <n_row>`, where `<dir>` is the directory to checkerboard images (e.g., `calibration_imgs`), and `<n_col>` and `<n_row>` are the number of intersecting columns and rows (e.g., 9 and 6) in the checkerboard, respectively.
+The parameters from the camera calibration routine are uploaded to the repository as `pickled_cal_params`. If one desires to run the calibration routine again, run `python src/calibration.py <dir> <n_col>, <n_row>`, where `<dir>` is the directory where checkerboard images are saved to (e.g., `calibration_imgs`), and `<n_col>` and `<n_row>` are the number of intersecting columns and rows (e.g., 9 and 6) in the checkerboard, respectively.
 
 To perform lane detection on `<file>`, run `python src/main.py <file>`. The file to perform detection on may be either a `jpg` or an `mp4`.
 
